@@ -42,6 +42,10 @@ public class SpotifyPlayer extends Player {
     public static final String PIEPSER_DEVICE_NAME = "idamusik";
 //    private static final String PIEPSER_DEVICE_NAME = "Livingroom Touch";
 
+    private static final String FILENAME_SETTING = "SETTING_ONLINE";
+    SettingsParcelable mSetting;
+    boolean mOverwriteSetting;
+
 
     private SpotifyAppRemote mSpotifyAppRemote;
     private MainActivity activity;
@@ -54,6 +58,7 @@ public class SpotifyPlayer extends Player {
     public SpotifyPlayer(MainActivity activity, PlayerListener listener) {
         this.activity = activity;
         this.listener = listener;
+        mSetting = new SettingsParcelable(activity.getApplicationContext(), FILENAME_SETTING);
     }
 
     void setPlayerstate(PlayerState playerstate) {
@@ -62,6 +67,7 @@ public class SpotifyPlayer extends Player {
 
     @Override
     public void connect() {
+        mOverwriteSetting = false;
         // We will start writing our code here.
         // Set the connection parameters
         ConnectionParams connectionParams =
@@ -157,6 +163,15 @@ public class SpotifyPlayer extends Player {
     }
 
     void onTrackChange(Track track){
+        if (!mOverwriteSetting){
+            if(!getActualAlbum().equals(mSetting.online_uri_playable)){
+                play(mSetting.online_uri_playable);
+                pause();
+            }
+            mOverwriteSetting = true;
+        }
+        mSetting.toFile(getActualAlbum());
+
         this.listener.onTrackChange( track.name, track.uri);
 
     }
@@ -167,8 +182,6 @@ public class SpotifyPlayer extends Player {
             pause();
             SpotifyAppRemote.disconnect(mSpotifyAppRemote);
         }
-
-
     }
 
     @Override

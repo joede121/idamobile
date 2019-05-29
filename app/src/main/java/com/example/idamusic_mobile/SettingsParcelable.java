@@ -9,17 +9,22 @@ public class SettingsParcelable {
 
     public String offline_uri_playable = "";
     public long offline_id_song = 0b0;
-    transient Context mContext;
-    transient static final String FILENAME_SETTINGS = "SETTINGS";
+    public String online_uri_playable = "";
 
-    public SettingsParcelable(Context context){
+    transient Context mContext;
+    transient String mFilename;
+
+    public SettingsParcelable(Context context, String filename){
         mContext = context;
-        String json = OfflinePlayer.readJSON(mContext, FILENAME_SETTINGS);
+        mFilename = filename;
+        String json = OfflinePlayer.readJSON(mContext, filename);
         if( json != null ) {
             Log.d("OfflineSettingsImport", "JSON" + json);
             SettingsParcelable set = new Gson().fromJson(json, SettingsParcelable.class);
             this.offline_id_song = set.offline_id_song;
             this.offline_uri_playable = set.offline_uri_playable;
+            this.online_uri_playable = set.online_uri_playable;
+
         }
 
     }
@@ -29,8 +34,17 @@ public class SettingsParcelable {
         offline_id_song = id;
         String json = new Gson().toJson(this);
         Log.d("OfflineSettingsExport", "JSON" + json);
-        OfflinePlayer.writeJSON(json, mContext, FILENAME_SETTINGS);
+        OfflinePlayer.writeJSON(json, mContext, mFilename);
     }
+
+    public void toFile(String uri){
+        online_uri_playable = uri;
+        String json = new Gson().toJson(this);
+        Log.d("OfflineSettingsExport", "JSON" + json);
+        OfflinePlayer.writeJSON(json, mContext, mFilename);
+    }
+
+
 
 }
 

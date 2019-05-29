@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Base64;
@@ -38,6 +39,7 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
     PlayableItemOffline mActualPlayable;
     String mActState ="";
     SettingsParcelable mSettings;
+    transient static final String FILENAME_SETTINGS = "SETTINGS";
 
     public OfflinePlayer(Context context, PlayerListener listener){
         this.listener = listener;
@@ -47,7 +49,7 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
         mMediaPlayer.setOnCompletionListener(this);
         mActState = PLAYER_STATE_PAUSE;
         listener.onPlayerStateChange(mActState);
-        mSettings = new SettingsParcelable(context);
+        mSettings = new SettingsParcelable(context, FILENAME_SETTINGS);
 
         listener.onTrackChange("Nix ausgewählt", "");
         listener.onAlbumCoverChange(BitmapFactory.decodeResource(context.getResources(),
@@ -56,7 +58,7 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
 
     @Override
     public void connect() {
-        // Oflline Sachen Holen
+        // Oflline Sachen Holel);
         this.mPItems = getPlayableItemsFromFile(this.mContext);
         if (mPItems != null) {
             mActualPlayable = mPItems.getPlayableItemFromUri(mSettings.offline_uri_playable);
@@ -142,8 +144,11 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
     @Override
     public void next() {
         Song song = mActualPlayable.getNextSong(mActualSong);
+        for (Song s: mActualPlayable.mSongs){
+            Log.d("songs", s.getId() + s.getTitle() + mActualPlayable.name);
+        }
         if(song != null) {
-            Log.d("next", song.getTitle());
+            Log.d("next", song.getId() + song.getTitle());
             playSong(song);
             mSettings.toFile(mActualPlayable.spotify_uri, mActualSong.getId());
         }
@@ -152,7 +157,7 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
     @Override
     public void prev() {
         Song song = mActualPlayable.getLastSong(mActualSong);
-        Log.d("next", song.getTitle());
+        Log.d("prev", song.getId() + song.getTitle());
         playSong(song);
     }
 
@@ -329,6 +334,7 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
             int artistColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.ARTIST);
             while (musicCursor.moveToNext()){
+                Log.d("music0 ", musicCursor.toString());
                 pio.mSongs.add(new Song(musicCursor.getLong(idColumn), musicCursor.getString(titleColumn), musicCursor.getString(artistColumn)));
                 Log.d("music1 ", musicCursor.getString(idColumn));
                 Log.d("music2 ", musicCursor.getString(artistColumn) + musicCursor.getString(titleColumn));
