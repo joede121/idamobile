@@ -7,8 +7,13 @@
     android:name="com.example.test_app.ItemFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
+    android:layout_marginLeft="2dp"
+    android:layout_marginRight="2dp"
     app:layoutManager="LinearLayoutManager"
-    tools:context=".ItemFragment"
-    tools:listitem="@layout/fragment_item" />
+    tools:listitem="@layout/fragment_item"
+tools:context=".ItemFragment">>
+
+
+
+
+</android.support.v7.widget.RecyclerView>

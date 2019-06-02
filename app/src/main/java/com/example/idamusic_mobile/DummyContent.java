@@ -5,6 +5,10 @@ import android.util.Log;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -93,6 +97,7 @@ public class DummyContent {
                 i++;
                 addItem(new DummyItem(String.valueOf(i.toString()), "pp", "tt", pi));
                 Log.d("MainActivity", pi.artist + "Playable Item Playlist " + pi.name);
+
             }
 
             @Override
@@ -100,14 +105,33 @@ public class DummyContent {
                 Log.d("MainActivity", "Error Fetch Playlist");
             }
         });
-
     }
+
+
+
+      public static void sort() {
+          Collections.sort(ITEMS, new Comparator<DummyItem>() {
+              @Override
+              public int compare(DummyItem first, DummyItem second) {
+                  String one= new String (first.playable.artist + first.playable.name).toUpperCase();
+                  String two= new String (second.playable.artist + second.playable.name).toUpperCase();
+                  return one.compareTo(two);
+              }
+          });
+          Integer y = new Integer(0);
+          for(DummyItem d :ITEMS){
+              y++;
+              d.id = y.toString();
+          }
+      }
+
+
 
     /**
      * A dummy item representing a piece of content.
      */
     public static class DummyItem {
-        public final String id;
+        public String id;
         public final String content;
         public final String details;
         public final PlayableItem playable;

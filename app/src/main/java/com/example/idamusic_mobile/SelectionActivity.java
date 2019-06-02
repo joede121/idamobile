@@ -31,6 +31,12 @@ public class SelectionActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        DummyContent.sort();
+    }
+
+    @Override
     public void onListFragmentInteraction(DummyItem item) {
         Log.d("MainActivity", "auswahl" + item.playable.artist + item.playable.name + item.id + item.toString());
         Intent data = new Intent();
