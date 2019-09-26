@@ -11,28 +11,27 @@
         android:id="@+id/imageView3"
         android:layout_width="127dp"
         android:layout_height="80dp"
-        android:layout_marginBottom="47dp"
         android:layout_marginEnd="8dp"
+        android:layout_marginBottom="47dp"
         android:foreground="@drawable/btn_next"
         android:foregroundGravity="center"
+        android:hapticFeedbackEnabled="true"
         android:onClick="onClickNext"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/button_icon_green"
-        />
+        app:srcCompat="@drawable/button_icon_green" />
 
     <ImageView
         android:id="@+id/imageViewArt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:onClick="buttonClickSelect"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:srcCompat="@tools:sample/avatars"
+        android:adjustViewBounds="true"
+        android:hapticFeedbackEnabled="true"
+        android:scaleType="fitCenter"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        android:adjustViewBounds="true"
-        android:scaleType="fitCenter"/>
+        app:layout_constraintTop_toTopOf="parent"
+        tools:srcCompat="@tools:sample/avatars" />
 
     <TextView
         android:id="@+id/textView2"
@@ -45,11 +44,11 @@
         android:text="TextView"
         android:textSize="16sp"
         android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@+id/imageViewArt"
         app:layout_constraintBottom_toTopOf="@+id/imageView"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageViewArt"
         app:layout_constraintVertical_bias="0.3" />
 
 
@@ -60,11 +59,12 @@
         android:layout_marginBottom="47dp"
         android:foreground="@drawable/ic_play"
         android:foregroundGravity="center"
+        android:hapticFeedbackEnabled="true"
         android:onClick="buttonOnClick"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:srcCompat="@drawable/button_icon_yellow"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent" />/>
+        app:layout_constraintRight_toRightOf="parent"
+        app:srcCompat="@drawable/button_icon_yellow" />/>
 
 
     <ImageView
@@ -75,9 +75,26 @@
         android:layout_marginBottom="47dp"
         android:foreground="@drawable/btn_prev"
         android:foregroundGravity="center"
+        android:hapticFeedbackEnabled="true"
         android:onClick="onClickPrev"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:srcCompat="@drawable/button_icon_green" />
+
+    <ImageView
+        android:id="@+id/imageViewSelect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="0dp"
+        android:hapticFeedbackEnabled="true"
+        android:alpha="0.9"
+        android:onClick="buttonClickSelect"
+        app:layout_constraintLeft_toLeftOf="@id/imageViewArt"
+        app:layout_constraintRight_toRightOf="@id/imageViewArt"
+        app:layout_constraintTop_toTopOf="@id/imageViewArt"
+        app:layout_constraintBottom_toBottomOf="@id/imageViewArt"
+        app:srcCompat="@drawable/ic_play_selection"
+        tools:layout_editor_absoluteX="148dp" />
 
 </android.support.constraint.ConstraintLayout>

@@ -11,6 +11,7 @@ import android.os.AsyncTask;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.HapticFeedbackConstants;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -176,15 +177,19 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
     }
 
     public void onClickNext(View view) {
+        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
         player.next();
     }
 
     public void onClickPrev(View view) {
+        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
         player.prev();
 
     }
 
     public void buttonOnClick(View view) {
+
+        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
 
         if (player.isPaused()) {
             if (uri != "") {
@@ -203,6 +208,7 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
     }
 
     public void buttonClickSelect(View view) {
+        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
         openSelectActicity();
     }
 

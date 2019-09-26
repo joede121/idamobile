@@ -240,7 +240,11 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
             pi.player = this;
             if (!pi.spotify_uri.substring(0,6).equals("spotify")) pi.spotify_uri = "spotify:album:" + pi.spotify_uri;
             pi.mSongs = new ArrayList<>();
-            if (isOfflineAvailable(pi)) pis2.mPlayableItems.add(pi);
+            if (isOfflineAvailable(pi, true)){
+                pis2.mPlayableItems.add(pi);
+            } else if (isOfflineAvailable(pi, false)){
+                pis2.mPlayableItems.add(pi);
+            }
         }
         return  pis2;
     }
@@ -313,13 +317,21 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
         return decodedByte;
     }
 
-    private boolean isOfflineAvailable(PlayableItemOffline pio){
+    private boolean isOfflineAvailable(PlayableItemOffline pio, boolean searchWithArtist){
         boolean found = false;
         ContentResolver musicResolver = this.mContext.getContentResolver();
         Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        String selection = MediaStore.Audio.Media.ALBUM + " = ? AND "
-                         + MediaStore.Audio.Media.ARTIST + " = ?";
-        String[] selectionArgs = {pio.name, pio.artist};
+        String selection;
+        String[] selectionArgs;
+
+        if (searchWithArtist) {
+            selection = MediaStore.Audio.Media.ALBUM + " = ? AND "
+                    + MediaStore.Audio.Media.ARTIST + " = ?";
+            selectionArgs = new String[]{pio.name, pio.artist};
+        }else{
+             selection = MediaStore.Audio.Media.ALBUM + " = ?";
+            selectionArgs = new String[]{pio.name};
+        }
         String sort_order = MediaStore.Audio.Media.TRACK + " ASC";
 
         //selectionArgs[1] = pio.artist;
@@ -342,6 +354,7 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
 
             }
             if(found) return true;
+
             return false;
         }
         return false;
