@@ -41,6 +41,7 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
     SettingsParcelable mSettings;
     transient static final String FILENAME_SETTINGS = "SETTINGS";
 
+
     public OfflinePlayer(Context context, PlayerListener listener){
         this.listener = listener;
         this.mContext = context;
@@ -51,7 +52,7 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
         listener.onPlayerStateChange(mActState);
         mSettings = new SettingsParcelable(context, FILENAME_SETTINGS);
 
-        listener.onTrackChange("Nix ausgewählt", "");
+        listener.onTrackChange("Nix ausgewählt", "", 0);
         listener.onAlbumCoverChange(BitmapFactory.decodeResource(context.getResources(),
                 R.drawable.ic_play_selection));
     }
@@ -129,7 +130,7 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
         }
 
         listener.onPlayerStateChange(PLAYER_STATE_PLAY);
-        listener.onTrackChange(song.getTitle(), mActualPlayable.spotify_uri);
+        listener.onTrackChange(song.getTitle(), mActualPlayable.spotify_uri, mMediaPlayer.getDuration());
         listener.onAlbumCoverChange(mActualPlayable.image);
     }
 
@@ -138,7 +139,7 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
         mMediaPlayer.start();
         mActState = PLAYER_STATE_PLAY;
         listener.onPlayerStateChange(PLAYER_STATE_PLAY);
-        listener.onTrackChange(mActualSong.getTitle(), mActualPlayable.spotify_uri);
+        listener.onTrackChange(mActualSong.getTitle(), mActualPlayable.spotify_uri, mMediaPlayer.getDuration());
     }
 
     @Override
@@ -227,8 +228,10 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
     @Override
     public void onCompletion(MediaPlayer mp) {
         mActState = Player.PLAYER_STATE_PAUSE;
-        mSettings.toFile(mActualPlayable.spotify_uri, mActualSong.getId());
-        next();
+        if (mActualPlayable != null) {
+            mSettings.toFile(mActualPlayable.spotify_uri, mActualSong.getId());
+            next();
+        }
     }
 
     private PlayableItems getPlayableItemsFromFile(Context context){
@@ -358,6 +361,16 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
             return false;
         }
         return false;
+    }
+
+    @Override
+    public int getCurrentPosition(){
+        return mMediaPlayer.getCurrentPosition();
+    }
+
+    @Override
+    public void setCurrentPosition(int currentPosition) {
+        mMediaPlayer.seekTo(currentPosition);
     }
 
     @Override

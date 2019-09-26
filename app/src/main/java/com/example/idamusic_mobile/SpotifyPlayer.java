@@ -45,11 +45,12 @@ public class SpotifyPlayer extends Player {
     private static final String FILENAME_SETTING = "SETTING_ONLINE";
     SettingsParcelable mSetting;
     boolean mOverwriteSetting;
+    Integer mActPosition;
 
 
     private SpotifyAppRemote mSpotifyAppRemote;
     private MainActivity activity;
-    private PlayerState playerstate;
+    private PlayerState mplayerstate;
 
     private String mAccessToken;
 
@@ -59,10 +60,11 @@ public class SpotifyPlayer extends Player {
         this.activity = activity;
         this.listener = listener;
         mSetting = new SettingsParcelable(activity.getApplicationContext(), FILENAME_SETTING);
+        mActPosition = 0;
     }
 
     void setPlayerstate(PlayerState playerstate) {
-        this.playerstate = playerstate;
+        this.mplayerstate = playerstate;
     }
 
     @Override
@@ -97,9 +99,9 @@ public class SpotifyPlayer extends Player {
                                                     if (listener != null ) listener.onAlbumCoverChange ( bitmap );
                                                 });
                                     }
-                                    if (playerstate.isPaused) {
+                                    if (mplayerstate.isPaused) {
                                         if (listener != null ) listener.onPlayerStateChange(Player.PLAYER_STATE_PAUSE);
-                                    } else if (!playerstate.isPaused) {
+                                    } else if (!mplayerstate.isPaused) {
                                         if (listener != null ) listener.onPlayerStateChange(Player.PLAYER_STATE_PLAY);
                                     }
 
@@ -171,8 +173,8 @@ public class SpotifyPlayer extends Player {
             mOverwriteSetting = true;
         }
         mSetting.toFile(getActualAlbum());
+        this.listener.onTrackChange( track.name, track.uri, (int)track.duration );
 
-        this.listener.onTrackChange( track.name, track.uri);
 
     }
 
@@ -187,12 +189,12 @@ public class SpotifyPlayer extends Player {
     //
     @Override
     public String getActualTrackUri() {
-        return playerstate.track.uri;
+        return mplayerstate.track.uri;
     }
 
     @Override
     public boolean isPaused() {
-        return playerstate.isPaused;
+        return mplayerstate.isPaused;
     }
 
     @Override
@@ -362,7 +364,7 @@ public class SpotifyPlayer extends Player {
 
     @Override
     public String getActualAlbum(){
-        return this.playerstate.track.album.uri;
+        return this.mplayerstate.track.album.uri;
     }
 
     @Override
@@ -410,6 +412,28 @@ public class SpotifyPlayer extends Player {
     public String getActivePlayerDevice(){
         return getActiveDevice().name;
 
+    }
+
+    public int getCurrentPosition(){
+        if (mSpotifyAppRemote != null) {
+            mSpotifyAppRemote.getPlayerApi().getPlayerState()
+                    .setResultCallback(
+                            playerState -> mplayerstate = playerState
+                    );
+
+            if (mplayerstate != null) {
+                return (int) mplayerstate.playbackPosition;
+            } else {
+                return 0;
+            }
+        }else{
+            return 0;
+        }
+    }
+
+    @Override
+    public void setCurrentPosition(int currentPosition) {
+        mSpotifyAppRemote.getPlayerApi().seekTo((long)currentPosition);
     }
 }
 

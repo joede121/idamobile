@@ -6,7 +6,7 @@ interface PlayerListener {
 
     public void onPlayerStateChange( String player_state );
 
-    public void onTrackChange( String track_name, String uri);
+    public void onTrackChange( String track_name, String uri, int duration);
 
     public void onAlbumCoverChange( Bitmap cover );
 

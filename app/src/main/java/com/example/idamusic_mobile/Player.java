@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public abstract class Player {
     public static final String PLAYER_STATE_PLAY = "PLAY";
@@ -21,6 +22,11 @@ public abstract class Player {
     Integer error_cnt;
     final static int ERROR_CNT_LIMIT = 99;
 
+    public String getStringDuration(int duration){
+        return String.format("%02d:%02d",
+                TimeUnit.MILLISECONDS.toMinutes(duration),
+                TimeUnit.MILLISECONDS.toSeconds(duration) % TimeUnit.MINUTES.toSeconds(1));
+    }
 
     public static Player factory(MainActivity act, PlayerListener listener, String mode) {
         if(mode.equals("OFFLINE")){
@@ -72,6 +78,9 @@ public abstract class Player {
 
     public abstract String getActivePlayerDevice();
 
+    public abstract int getCurrentPosition();
+
+    public abstract void setCurrentPosition( int currentPosition );
 
     public Bitmap getBitmapFromURL(String src) {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();

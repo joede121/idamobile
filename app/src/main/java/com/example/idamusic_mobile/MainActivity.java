@@ -7,7 +7,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.AudioManager;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -21,10 +23,12 @@ import android.view.View;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 public class MainActivity extends AppCompatActivity implements PlayerListener, PopupMenu.OnMenuItemClickListener {
@@ -35,19 +39,28 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
     private boolean mShowBeamOption = false;
     public static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 9998;
     String mMode = Player.MODE_ONLINE;
-
+    SeekBar mSeekBar;
+    Handler mSeekBarUpdateHandler;
+    Runnable mUpdateSeekbar;
+    int mActDuration;
 
     public void onPlayerStateChange( String player_state){
         if (player_state.equals(Player.PLAYER_STATE_PLAY)) {
             imStop.setForeground(getResources().getDrawable(R.drawable.btn_pause));
+            mSeekBarUpdateHandler.postDelayed(mUpdateSeekbar, 0);
         } else {
             imStop.setForeground(getResources().getDrawable(R.drawable.btn_play));
+            mSeekBarUpdateHandler.removeCallbacks(mUpdateSeekbar);
+
         }
     }
 
-    public void onTrackChange( String track_name, String uri){
+    public void onTrackChange( String track_name, String uri, int duration){
         setTextTrack(track_name);
         this.uri = uri;
+        SeekBar seekBar = findViewById(R.id.seekBar);
+        seekBar.setMax(duration);
+        mActDuration = duration;
     }
 
     public void onAlbumCoverChange( Bitmap cover ){
@@ -61,6 +74,10 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
          this.invalidateOptionsMenu();
     }
 
+    public void onResume(){
+        super.onResume();
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
+    }
     public void onConnectedError(){
         if (mMode.equals(Player.MODE_ONLINE))
             goOffline();
@@ -91,6 +108,42 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
         player.connect();
         //btn = findViewById(R.id.button);
         imStop = findViewById(R.id.imageView);
+        mSeekBar = findViewById(R.id.seekBar);
+        mSeekBarUpdateHandler = new Handler();
+        TextView curPos = findViewById(R.id.textViewCurrentPosition);
+        mUpdateSeekbar = new Runnable() {
+            @Override
+            public void run() {
+                mSeekBar.setProgress(player.getCurrentPosition());
+                curPos.setText(player.getStringDuration(mActDuration - player.getCurrentPosition()));
+                //Log.d("MainActivity", "Current" + player.getCurrentPosition());
+                mSeekBarUpdateHandler.postDelayed(this, 50);
+            }
+        };
+        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int progress = 0;
+            // When Progress value changed.
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progressValue, boolean fromUser) {
+                if (fromUser){
+                    progress = progressValue;
+                }
+            }
+
+            // Notification that the user has started a touch gesture.
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            // Notification that the user has finished a touch gesture
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                player.setCurrentPosition(progress);
+            }
+
+
+        });
 
     }
 
@@ -162,6 +215,7 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
         TextView editText = findViewById(R.id.textView2);
         Log.d("TextTrack", "RESUME" + track);
         editText.setText(track);
+
 
     }
 
