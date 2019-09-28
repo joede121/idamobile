@@ -350,7 +350,7 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
                     (android.provider.MediaStore.Audio.Media.ARTIST);
             while (musicCursor.moveToNext()){
                 Log.d("music0 ", musicCursor.toString());
-                pio.mSongs.add(new Song(musicCursor.getLong(idColumn), musicCursor.getString(titleColumn), musicCursor.getString(artistColumn)));
+                pio.mSongs.add(new Song(musicCursor.getLong(idColumn), musicCursor.getString(titleColumn), musicCursor.getString(artistColumn), musicCursor.getString(idColumn)));
                 Log.d("music1 ", musicCursor.getString(idColumn));
                 Log.d("music2 ", musicCursor.getString(artistColumn) + musicCursor.getString(titleColumn));
                 found = true;
@@ -377,5 +377,21 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
     public boolean isPaused() {
         if(mActState.equals(PLAYER_STATE_PAUSE)) return true;
         return false;
+    }
+
+    public void getAlbumTracks( String uri, PlayerListenerAlbumTracks listener){
+        for (Song s : mActualPlayable.mSongs){
+            listener.success(s);
+        }
+    }
+
+    @Override
+    public PlayableItem getActPlayableItem(){
+        return mActualPlayable;
+    }
+
+    @Override
+    public void play_song(String uri){
+        playSong(mActualPlayable.getSongFromId(Long.parseLong(uri)));
     }
 }

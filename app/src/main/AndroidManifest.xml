@@ -12,6 +12,9 @@
         <activity android:name="com.example.idamusic_mobile.SelectionActivity">
 
         </activity>
+        <activity android:name="com.example.idamusic_mobile.SongSelectActivity">
+
+        </activity>
         <activity android:name="com.example.idamusic_mobile.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

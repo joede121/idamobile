@@ -26,6 +26,8 @@ import android.widget.PopupMenu;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -36,13 +38,16 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
     private ImageView imStop;
     private Player player;
     public static final int INPUT_ACTIVITY_RESULT = 9999;
+    public static final int INPUT_SONG_RESULT = 9900;
     private boolean mShowBeamOption = false;
     public static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 9998;
-    String mMode = Player.MODE_ONLINE;
+    String mMode = Player.MODE_OFFLINE;
     SeekBar mSeekBar;
     Handler mSeekBarUpdateHandler;
     Runnable mUpdateSeekbar;
     int mActDuration;
+    static final int MAX_CNT_ACT_POS = 300;
+    int mCntActPos = 0;
 
     public void onPlayerStateChange( String player_state){
         if (player_state.equals(Player.PLAYER_STATE_PLAY)) {
@@ -51,11 +56,13 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
         } else {
             imStop.setForeground(getResources().getDrawable(R.drawable.btn_play));
             mSeekBarUpdateHandler.removeCallbacks(mUpdateSeekbar);
+            mCntActPos = 0;
 
         }
     }
 
     public void onTrackChange( String track_name, String uri, int duration){
+        mCntActPos = 0;
         setTextTrack(track_name);
         this.uri = uri;
         SeekBar seekBar = findViewById(R.id.seekBar);
@@ -102,21 +109,32 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
             // MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE is an
             // app-defined int constant that should be quite unique
         }
-
-
+        mSeekBar = findViewById(R.id.seekBar);
+        mSeekBarUpdateHandler = new Handler();
+        imStop = findViewById(R.id.imageView);
         player = Player.factory(this, this, mMode);
         player.connect();
         //btn = findViewById(R.id.button);
-        imStop = findViewById(R.id.imageView);
-        mSeekBar = findViewById(R.id.seekBar);
-        mSeekBarUpdateHandler = new Handler();
+
         TextView curPos = findViewById(R.id.textViewCurrentPosition);
         mUpdateSeekbar = new Runnable() {
+            int currentPosition;
+            long lastCallCurrentPos=0;
             @Override
             public void run() {
-                mSeekBar.setProgress(player.getCurrentPosition());
-                curPos.setText(player.getStringDuration(mActDuration - player.getCurrentPosition()));
-                //Log.d("MainActivity", "Current" + player.getCurrentPosition());
+                currentPosition = currentPosition + (int)(System.currentTimeMillis()-lastCallCurrentPos);
+                if (currentPosition>mActDuration)
+                    currentPosition = 0;
+                    lastCallCurrentPos = System.currentTimeMillis();
+                if (mCntActPos == 0) {
+                    currentPosition = player.getCurrentPosition();
+                    lastCallCurrentPos = System.currentTimeMillis();
+                }
+                mSeekBar.setProgress(currentPosition);
+                curPos.setText("-" + player.getStringDuration(mActDuration - currentPosition));
+                mCntActPos++;
+                if (mCntActPos >  MAX_CNT_ACT_POS)
+                    mCntActPos = 0;
                 mSeekBarUpdateHandler.postDelayed(this, 50);
             }
         };
@@ -140,6 +158,7 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 player.setCurrentPosition(progress);
+                mCntActPos = 0;
             }
 
 
@@ -168,6 +187,13 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
                 spotPlay(uri);
                 Log.d("MainActivity", id + "Auswal main " + this.uri);
                 this.uri = uri;
+            }
+
+        }
+
+        if (INPUT_SONG_RESULT == requestCode) {
+            if (resultCode == RESULT_OK) {
+                player.play_song(data.getStringExtra("Song_Uri"));
             }
 
         }
@@ -261,10 +287,26 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
         startActivityForResult(intent, INPUT_ACTIVITY_RESULT);
     }
 
+    void openSelectSongActicity() {
+        Intent intent = new Intent(this, SongSelectActivity.class);
+        Songs songs = new Songs();
+        songs.mSongs = player.getActPlayableItem().mSongs;
+        String json = new Gson().toJson(songs);
+        intent.putExtra("Songs", json);
+        startActivityForResult(intent, INPUT_SONG_RESULT);
+    }
+
     public void buttonClickSelect(View view) {
         view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
         openSelectActicity();
     }
+
+    public void onClickSong(View view) {
+        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+        openSelectSongActicity();
+    }
+
+
 
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();

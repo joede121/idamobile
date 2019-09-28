@@ -32,3 +32,10 @@ interface PlayerListenerAlbum {
 
 }
 
+interface PlayerListenerAlbumTracks {
+    public void success(Song song);
+
+    public void error();
+
+}
+

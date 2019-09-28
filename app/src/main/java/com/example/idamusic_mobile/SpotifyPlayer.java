@@ -45,14 +45,18 @@ public class SpotifyPlayer extends Player {
     private static final String FILENAME_SETTING = "SETTING_ONLINE";
     SettingsParcelable mSetting;
     boolean mOverwriteSetting;
-    Integer mActPosition;
+    Integer mActPosition = 0;
 
 
     private SpotifyAppRemote mSpotifyAppRemote;
     private MainActivity activity;
     private PlayerState mplayerstate;
+    PlayableItemSpotify mActualPlayable;
 
     private String mAccessToken;
+
+    private long mlastCallCurrentPos = 0;
+
 
     SpotifyDevice mSelectedDevice;
 
@@ -165,6 +169,7 @@ public class SpotifyPlayer extends Player {
     }
 
     void onTrackChange(Track track){
+        checkActPlayableItem();
         if (!mOverwriteSetting){
             if(!getActualAlbum().equals(mSetting.online_uri_playable)){
                 play(mSetting.online_uri_playable);
@@ -176,6 +181,18 @@ public class SpotifyPlayer extends Player {
         this.listener.onTrackChange( track.name, track.uri, (int)track.duration );
 
 
+    }
+
+    private void checkActPlayableItem(){
+        Log.d("CheckActualPlayable1", "CHECK" );
+        if (mActualPlayable != null) {
+            Log.d("CheckActualPlayable", getActualAlbum() + " " + mActualPlayable.spotify_uri );
+            if (!getActualAlbum().equals(mActualPlayable.spotify_uri)){
+                mActualPlayable = new PlayableItemSpotify(getActualAlbum(), this);
+            }
+        }else{
+            mActualPlayable = new PlayableItemSpotify(getActualAlbum(), this);
+        }
     }
 
     @Override
@@ -287,7 +304,13 @@ public class SpotifyPlayer extends Player {
         SpotifyApi api = new SpotifyApi();
         api.setAccessToken(mAccessToken);
         SpotifyService spotify = api.getService();
-        spotify.getAlbum(uri, new Callback<Album>() {
+        Log.d("Album URI", uri);
+        String uri1 = uri;
+        if("spotify:album:".equals(uri.substring(0,14))){
+            uri1 = uri.substring(14);
+        }
+        Log.d("Album URI", uri1);
+        spotify.getAlbum(uri1, new Callback<Album>() {
             @Override
             public void success(Album album, Response response) {
                 if (listenertimo != null)
@@ -297,10 +320,38 @@ public class SpotifyPlayer extends Player {
 
             @Override
             public void failure(RetrofitError error) {
-                error_cnt++;
+                // error_cnt++;
                 Log.d("Album failure", error.toString());
-                if (error_cnt < ERROR_CNT_LIMIT)
-                    getAlbum(uri, listenertimo);
+                // if (error_cnt < ERROR_CNT_LIMIT)
+                //    getAlbum(uri, listenertimo);
+            }
+        });
+    }
+
+    @Override
+    public void getAlbumTracks(String uri, PlayerListenerAlbumTracks listener) {
+        SpotifyApi api = new SpotifyApi();
+        api.setAccessToken(mAccessToken);
+        SpotifyService spotify = api.getService();
+        String uri1 = uri;
+        if("spotify:album:".equals(uri.substring(0,14))){
+            uri1 = uri.substring(14);
+        }
+        Log.d("Album URI Track", uri1);
+        spotify.getAlbumTracks(uri1, new Callback<Pager<kaaes.spotify.webapi.android.models.Track>>() {
+            @Override
+            public void success(Pager<kaaes.spotify.webapi.android.models.Track> trackPager, Response response) {
+                for( kaaes.spotify.webapi.android.models.Track track : trackPager.items){
+                    if (listener != null)
+                        listener.success(new Song(1, track.name, track.artists.get(0).name, track.uri));
+                    Log.d("Album Track success", track.name);
+                    }
+                }
+
+            @Override
+            public void failure(RetrofitError retrofitError) {
+                Log.d("AlbumTracks failure", retrofitError.toString());
+
             }
         });
     }
@@ -415,25 +466,52 @@ public class SpotifyPlayer extends Player {
     }
 
     public int getCurrentPosition(){
-        if (mSpotifyAppRemote != null) {
-            mSpotifyAppRemote.getPlayerApi().getPlayerState()
-                    .setResultCallback(
-                            playerState -> mplayerstate = playerState
-                    );
-
+        // ein bisschen Energie sparen
+/*        Long lastPos = mlastCallCurrentPos;
+        mlastCallCurrentPos = System.currentTimeMillis();
+        if (System.currentTimeMillis() - lastPos < 600 ) {
             if (mplayerstate != null) {
-                return (int) mplayerstate.playbackPosition;
+                if (mActPosition + 50 < (int) mplayerstate.playbackPosition) {
+                    mActPosition = (int) mplayerstate.playbackPosition;
+                }else {
+                    mActPosition += 50;
+                }
+                return mActPosition;
+            }
+            return mActPosition +=50;
+        } else {
+ */
+            if (mSpotifyAppRemote != null) {
+                mSpotifyAppRemote.getPlayerApi().getPlayerState()
+                        .setResultCallback(
+                                playerState -> mplayerstate = playerState
+                        );
+
+                if (mplayerstate != null) {
+                    mActPosition = (int) mplayerstate.playbackPosition;
+                    return mActPosition;
+                } else {
+                    return 0;
+                }
             } else {
                 return 0;
             }
-        }else{
-            return 0;
         }
-    }
+    // }
 
     @Override
     public void setCurrentPosition(int currentPosition) {
         mSpotifyAppRemote.getPlayerApi().seekTo((long)currentPosition);
+    }
+
+    @Override
+    public PlayableItem getActPlayableItem(){
+        return mActualPlayable;
+    }
+
+    @Override
+    public void play_song(String uri) {
+        // TODO play song spotify
     }
 }
 

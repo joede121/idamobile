@@ -6,7 +6,7 @@ import java.util.List;
 public class PlayableItemOffline extends PlayableItem {
 
     public String image_string;
-    public List<Song> mSongs;
+
 
     public PlayableItemOffline(String uri, Player player1) {
         super(uri, player1);
@@ -19,7 +19,7 @@ public class PlayableItemOffline extends PlayableItem {
         this.name = pi.name;
         this.uri = pi.uri;
         this.spotify_uri = pi.uri;
-        mSongs = new ArrayList<>();
+
     }
 
     public Song getNextSong(Song song) {

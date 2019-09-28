@@ -1,8 +1,12 @@
 package com.example.idamusic_mobile;
 
+import android.content.Context;
 import android.content.Intent;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -15,14 +19,18 @@ import android.util.Log;
 public class SelectionActivity extends AppCompatActivity
         implements ItemFragment.OnListFragmentInteractionListener {
     private RecyclerView recyclerView;
-    private RecyclerView.Adapter mAdapter;
+    private MyItemRecyclerViewAdapter mAdapter;
+    int mFactor = 2;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.fragment_item_list);
+        setContentView(R.layout.fragment_item_list_2x2);
         recyclerView = (RecyclerView) findViewById(R.id.list);
-        mAdapter = new MyItemRecyclerViewAdapter(DummyContent.ITEMS, this);
+
+        mAdapter = new MyItemRecyclerViewAdapter(DummyContent.ITEMS, this, getWindowManager().getDefaultDisplay());
         recyclerView.setAdapter(mAdapter);
         for (DummyItem item : DummyContent.ITEMS) {
             Log.d("MainActivity", "playable" + item.playable.artist);
@@ -53,6 +61,16 @@ public class SelectionActivity extends AppCompatActivity
         return super.onCreateOptionsMenu(menu);
     }
 
+    private void changeLayout(){
+        int factor = 1;
+        if (mFactor == 1) factor = 2;
+        mAdapter.changeLayout(factor);
+        mFactor = factor;
+        Context context = recyclerView.getContext();
+        recyclerView.setLayoutManager(new GridLayoutManager(context, factor));
+        mAdapter.notifyDataSetChanged();
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
@@ -63,6 +81,10 @@ public class SelectionActivity extends AppCompatActivity
             case R.id.action_back:
                 super.finish();
                 break;
+            case R.id.action_change_layout:
+                changeLayout();
+                break;
+
         }
 
 

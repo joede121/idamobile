@@ -36,6 +36,7 @@ public abstract class Player {
         }
     }
 
+    public abstract PlayableItem getActPlayableItem();
 
     public abstract void connect();
 
@@ -61,8 +62,11 @@ public abstract class Player {
 
     public abstract  void pause();
 
+    public abstract void play_song(String uri_song);
+
     public abstract void getPlayableItems( String prefix, PlayerListenerPlaylists listener);
     public abstract void getAlbum( String uri, PlayerListenerAlbum listener);
+    public abstract void getAlbumTracks( String uri, PlayerListenerAlbumTracks listener);
 
     public abstract String getActualAlbum();
 

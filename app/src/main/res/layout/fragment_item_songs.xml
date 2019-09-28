@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/linearLayoutFragmentSong"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="4dp"
+    android:adjustViewBounds="true"
+    android:scaleType="fitCenter"
+    >
+
+    <ImageView
+        android:id="@+id/imageViewSongPlay"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:hapticFeedbackEnabled="true"
+        android:layout_marginEnd="20dp"
+        app:srcCompat="@drawable/ic_play_selection"
+        app:layout_constraintTop_toTopOf="@id/textSongTitle"
+        app:layout_constraintBottom_toBottomOf="@id/textSongArtist"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <TextView
+        android:id="@+id/textSongNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="3dp"
+        android:textStyle="bold"
+        android:text="1"
+        android:textSize="20dp"
+        android:fontFamily="sans-serif"
+        android:gravity="center"
+        android:maxLines="1"
+        app:layout_constraintTop_toTopOf="@id/textSongTitle"
+        app:layout_constraintBottom_toBottomOf="@id/textSongArtist"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+
+    <TextView
+        android:id="@+id/textSongTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="35dp"
+        android:textStyle="bold"
+        android:text="Song Title ist super mdlw dkwed dke wdew dwe"
+        android:fontFamily="sans-serif"
+        android:maxLines="1"
+        android:textSize="16dp"
+        android:maxWidth="320dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+
+        />
+
+    <TextView
+        android:id="@+id/textSongArtist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif"
+        android:maxLines="1"
+        android:textSize="14dp"
+        android:text="Bibi und Tina"
+        app:layout_constraintStart_toStartOf="@id/textSongTitle"
+        app:layout_constraintTop_toBottomOf="@id/textSongTitle"
+
+        />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorPrimaryDark"
+        android:layout_marginTop="4pt"
+        app:layout_constraintTop_toBottomOf="@id/textSongArtist"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+
+</android.support.constraint.ConstraintLayout>
