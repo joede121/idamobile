@@ -178,7 +178,7 @@ public class SpotifyPlayer extends Player {
             mOverwriteSetting = true;
         }
         mSetting.toFile(getActualAlbum());
-        this.listener.onTrackChange( track.name, track.uri, (int)track.duration );
+        this.listener.onTrackChange( track.name, track.uri, (int)track.duration, track.artist.name );
 
 
     }

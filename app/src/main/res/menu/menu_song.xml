@@ -3,7 +3,5 @@
     xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
-    <item
-        android:id="@+id/action_change_layout" android:icon="@drawable/ic_apps_24px" app:showAsAction="always"   android:title="@string/add"
-        />
+
 </menu>

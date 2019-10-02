@@ -10,9 +10,11 @@ import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.view.HapticFeedbackConstants;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -51,19 +53,19 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
 
     public void onPlayerStateChange( String player_state){
         if (player_state.equals(Player.PLAYER_STATE_PLAY)) {
-            imStop.setForeground(getResources().getDrawable(R.drawable.btn_pause));
+            imStop.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_circle_outline_24px));
             mSeekBarUpdateHandler.postDelayed(mUpdateSeekbar, 0);
         } else {
-            imStop.setForeground(getResources().getDrawable(R.drawable.btn_play));
+            imStop.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_circle_outline_24px));
             mSeekBarUpdateHandler.removeCallbacks(mUpdateSeekbar);
             mCntActPos = 0;
 
         }
     }
 
-    public void onTrackChange( String track_name, String uri, int duration){
+    public void onTrackChange( String track_name, String uri, int duration, String artist){
         mCntActPos = 0;
-        setTextTrack(track_name);
+        setTextTrack(track_name, artist);
         this.uri = uri;
         SeekBar seekBar = findViewById(R.id.seekBar);
         seekBar.setMax(duration);
@@ -84,7 +86,20 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
     public void onResume(){
         super.onResume();
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
+
+        findViewById(R.id.constraintLayoutNavSelect).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+        findViewById(R.id.constraintLayoutNavPlay).setBackground(getResources().getDrawable(R.drawable.radius_bg));
+        findViewById(R.id.constraintLayoutNavSelectSong).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+
+        ImageView iv = findViewById(R.id.imageViewNavSelect);
+        iv.setColorFilter(getResources().getColor(R.color.text));
+        iv = findViewById(R.id.imageViewNavPlay);
+        iv.setColorFilter(getResources().getColor(R.color.colorPrimary));
+        iv = findViewById(R.id.imageViewNavSongSelect);
+        iv.setColorFilter(getResources().getColor(R.color.text));
+
     }
+
     public void onConnectedError(){
         if (mMode.equals(Player.MODE_ONLINE))
             goOffline();
@@ -94,6 +109,11 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.main_toolbar);
+        setSupportActionBar(myToolbar);
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+
         if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
 
@@ -237,10 +257,12 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
         img.setImageBitmap(image);
     }
 
-    public void setTextTrack(String track) {
+    public void setTextTrack(String track, String artist) {
         TextView editText = findViewById(R.id.textView2);
         Log.d("TextTrack", "RESUME" + track);
         editText.setText(track);
+        editText = findViewById(R.id.textViewArtist);
+        editText.setText(artist);
 
 
     }
@@ -312,6 +334,12 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_start, menu);
         menu.findItem(R.id.action_beam).setVisible(mShowBeamOption);
+        if(player.getActivePlayerDevice().equals(SpotifyPlayer.PIEPSER_DEVICE_NAME)) {
+            menu.findItem(R.id.action_beam).setIcon(ContextCompat.getDrawable(this, R.drawable.ic_cast_connected));
+        }else{
+            menu.findItem(R.id.action_beam).setIcon(ContextCompat.getDrawable(this, R.drawable.ic_cast));
+        }
+
         //menu.findItem(R.id.action_select_beam).setVisible(mShowBeamOption);
         if(mMode.equals(Player.MODE_ONLINE)){
             menu.findItem(R.id.action_on).setTitle("Online");
@@ -351,10 +379,7 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
                     // DummyContent.refresh();
                 }
                 break;
-            case R.id.action_back:
-                super.finish();
-                break;
-            case R.id.action_beam:
+             case R.id.action_beam:
                 if(!player.getActivePlayerDevice().equals(SpotifyPlayer.PIEPSER_DEVICE_NAME)) {
                     player.setPiepserAsActivePlayer();
 //                    if (player.getActivePlayerDevice().equals(SpotifyPlayer.PIEPSER_DEVICE_NAME))
@@ -387,15 +412,15 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
         popup.setOnMenuItemClickListener(MainActivity.this);
         inflater.inflate(R.menu.menu_start_popup_players, popup.getMenu());
         int i = 0;
-        if(mMode.equals(Player.MODE_ONLINE)) {
-            SubMenu sub = popup.getMenu().addSubMenu("Beamen nach...");
-            i = 5000;
-            for (String player : player.getAllPlayers()) {
-                sub.add(0, i++, 0, player);
-            }
-            popup.getMenu().add(0, 9999, 0, "Offline speichern");
-
+        SubMenu sub = popup.getMenu().addSubMenu("Beamen nach...");
+        i = 5000;
+        for (String player : player.getAllPlayers()) {
+            sub.add(0, i++, 0, player);
         }
+        if (mMode.equals(Player.MODE_ONLINE)) {
+            popup.getMenu().add(0, 9999, 0, "Offline speichern");
+        }
+
         popup.show();
     }
     @Override
@@ -490,6 +515,14 @@ private class AsyncWaitConnect extends AsyncTask<String, String, String>{
         }
     }
 
+    public void buttonClickNavPlay(View view) {
+        //
+    }
+
+    public void  buttonClickNavSongSelect(View view){
+        openSelectSongActicity();
+
+    }
 
 
 }

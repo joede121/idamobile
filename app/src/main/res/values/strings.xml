@@ -3,4 +3,6 @@
     <string name="add">add</string>
     <string name="Online">Online</string>
     <string name="Offline">Offline</string>
+    <string name="title_selection_activity">Übersicht Alben</string>
+    <string name="title_song_activity">Wiedergabeliste</string>
 </resources>

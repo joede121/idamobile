@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
+import android.view.HapticFeedbackConstants;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -15,6 +17,8 @@ import android.view.MenuItem;
 import com.example.idamusic_mobile.DummyContent.DummyItem;
 
 import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
 
 public class SelectionActivity extends AppCompatActivity
         implements ItemFragment.OnListFragmentInteractionListener {
@@ -28,7 +32,14 @@ public class SelectionActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_item_list_2x2);
+
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.main_toolbar);
+        setSupportActionBar(myToolbar);
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        //getSupportActionBar().setHomeButtonEnabled(true);
+
         recyclerView = (RecyclerView) findViewById(R.id.list);
+
 
         mAdapter = new MyItemRecyclerViewAdapter(DummyContent.ITEMS, this, getWindowManager().getDefaultDisplay());
         recyclerView.setAdapter(mAdapter);
@@ -42,6 +53,24 @@ public class SelectionActivity extends AppCompatActivity
     protected void onStart() {
         super.onStart();
         DummyContent.sort();
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();;
+        findViewById(R.id.constraintLayoutNavSelect).setBackground(getResources().getDrawable(R.drawable.radius_bg));
+        ;
+        findViewById(R.id.constraintLayoutNavPlay).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+        findViewById(R.id.constraintLayoutNavSelectSong).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+
+        ImageView iv = findViewById(R.id.imageViewNavSelect);
+        iv.setColorFilter(getResources().getColor(R.color.colorPrimary));
+        iv = findViewById(R.id.imageViewNavPlay);
+        iv.setColorFilter(getResources().getColor(R.color.text));
+        iv = findViewById(R.id.imageViewNavSongSelect);
+        iv.setColorFilter(getResources().getColor(R.color.text));
+
     }
 
     @Override
@@ -73,17 +102,18 @@ public class SelectionActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
+        Log.d("Menu", item.getItemId() + "");
         switch (item.getItemId()) {
             case R.id.action_refresh:
                 DummyContent.refresh();
                 break;
-            case R.id.action_back:
-                super.finish();
-                break;
             case R.id.action_change_layout:
                 changeLayout();
                 break;
+            case android.R.id.home:
+                super.finish();
+                break;
+
 
         }
 
@@ -91,4 +121,16 @@ public class SelectionActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item); //To change body of generated methods, choose Tools | Templates.
     }
 
+
+    public void buttonClickSelect(View view) {
+        // do nothing
+    }
+
+    public void buttonClickNavPlay(View view) {
+        super.finish();
+    }
+
+    public void  buttonClickNavSongSelect(View view){
+
+    }
 }

@@ -1,15 +1,11 @@
 package com.example.idamusic_mobile;
 
 import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Base64;
@@ -19,42 +15,37 @@ import com.google.gson.Gson;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.GenericSignatureFormatError;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionListener{
+public class OfflinePlayer extends Player implements OfflinePlayerDev.OfflinePlayerDevListener{
     private final static String FILENAME_PLAYABLES = "playable_items";
     private MainActivity activity;
     PlayableItems mPItems;
     Context mContext;
     boolean mIsConnected;
-    MediaPlayer mMediaPlayer;
     Song mActualSong;
     PlayableItemOffline mActualPlayable;
     String mActState ="";
     SettingsParcelable mSettings;
+    OfflinePlayerDev mPlayerDevice;
     transient static final String FILENAME_SETTINGS = "SETTINGS";
-
+    String mActualPlayer = SpotifyPlayer.THIS_DEVICE_NAME;
 
     public OfflinePlayer(Context context, PlayerListener listener){
         this.listener = listener;
         this.mContext = context;
-        mMediaPlayer = new MediaPlayer();
-        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        mMediaPlayer.setOnCompletionListener(this);
+        mPlayerDevice = new OfflinePlayerAndroid(this, context);
         mActState = PLAYER_STATE_PAUSE;
         listener.onPlayerStateChange(mActState);
         mSettings = new SettingsParcelable(context, FILENAME_SETTINGS);
-
-        listener.onTrackChange("Nix ausgewählt", "", 0);
+        listener.onTrackChange("Nix ausgewählt", "", 0, "");
         listener.onAlbumCoverChange(BitmapFactory.decodeResource(context.getResources(),
                 R.drawable.ic_play_selection));
+        mActualPlayer = SpotifyPlayer.THIS_DEVICE_NAME;
     }
 
     @Override
@@ -86,9 +77,8 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
     @Override
     public void disconnect() {
         mIsConnected = false;
-        mMediaPlayer.stop();
-        mMediaPlayer.release();
-        mSettings.toFile(mActualPlayable.spotify_uri, mActualSong.getId());
+        if (mActualSong != null)
+            mSettings.toFile(mActualPlayable.spotify_uri, mActualSong.getId());
     }
 
     @Override
@@ -102,7 +92,6 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
         PlayableItemOffline pi = mPItems.getPlayableItemFromUri(uri);
         if (pi != null) {
             mActualPlayable = pi;
-
             Song song = pi.mSongs.get(0);
             playSong(song);
         }
@@ -113,45 +102,31 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
     }
 
     void playSong(Song song){
-
         mActualSong = song;
-
-        Uri myUri = ContentUris.withAppendedId(
-                android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                song.getId());
-        try {
-            mMediaPlayer.reset();
-            mMediaPlayer.setDataSource(this.mContext, myUri);
-            mMediaPlayer.prepare();
-            mMediaPlayer.start();
-            mActState = PLAYER_STATE_PLAY;
-        } catch (Exception e){
-            Log.d("Error", e.toString());
-        }
-
+        mPlayerDevice.playSong(mActualSong, mActualPlayable);
+        mActState = PLAYER_STATE_PLAY;
         listener.onPlayerStateChange(PLAYER_STATE_PLAY);
-        listener.onTrackChange(song.getTitle(), mActualPlayable.spotify_uri, mMediaPlayer.getDuration());
+        listener.onTrackChange(song.getTitle(), mActualPlayable.spotify_uri, mPlayerDevice.getDuration(), mActualSong.getArtist());
         listener.onAlbumCoverChange(mActualPlayable.image);
     }
 
     @Override
     public void resume() {
-        mMediaPlayer.start();
+        mPlayerDevice.resume();
         mActState = PLAYER_STATE_PLAY;
         listener.onPlayerStateChange(PLAYER_STATE_PLAY);
-        listener.onTrackChange(mActualSong.getTitle(), mActualPlayable.spotify_uri, mMediaPlayer.getDuration());
+        listener.onTrackChange(mActualSong.getTitle(), mActualPlayable.spotify_uri, mPlayerDevice.getDuration(), mActualSong.getArtist());
     }
 
     @Override
     public void next() {
         Song song = mActualPlayable.getNextSong(mActualSong);
-        for (Song s: mActualPlayable.mSongs){
-            Log.d("songs", s.getId() + s.getTitle() + mActualPlayable.name);
-        }
         if(song != null) {
             Log.d("next", song.getId() + song.getTitle());
             playSong(song);
             mSettings.toFile(mActualPlayable.spotify_uri, mActualSong.getId());
+        }else{
+            listener.onPlayerStateChange(mActState);
         }
     }
 
@@ -165,7 +140,7 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
     @Override
     public void pause() {
         Log.d("Pause", "");
-        mMediaPlayer.pause();
+        mPlayerDevice.pause();
         mActState = PLAYER_STATE_PAUSE;
         listener.onPlayerStateChange(mActState);
     }
@@ -202,31 +177,62 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
 
     @Override
     public void setPiepserAsActivePlayer() {
-
+        mActualPlayer = SpotifyPlayer.PIEPSER_DEVICE_NAME;
+        int pos = getCurrentPosition();
+        pos = pos - 1500;
+        if (pos < 0) pos = 0;
+        mPlayerDevice.disconnect();
+        mPlayerDevice = new OfflinePlayerSqueeze(this);
+        playSong(mActualSong);
+        pause();
+        try
+        {
+            Thread.sleep(300);
+        }
+        catch(InterruptedException ex)
+        {
+            Thread.currentThread().interrupt();
+        }
+        playSong(mActualSong);
+        setCurrentPosition(pos);
     }
 
     @Override
     public List<String> getAllPlayers() {
-        return null;
+        List<String> players = new ArrayList<>();
+        players.add(SpotifyPlayer.THIS_DEVICE_NAME);
+        players.add(SpotifyPlayer.PIEPSER_DEVICE_NAME);
+        return players;
     }
 
     @Override
     public void setActivePlayer(String player) {
-
+        if (!mActualPlayer.equals(player)){
+            if (player.equals(SpotifyPlayer.PIEPSER_DEVICE_NAME)){
+                setPiepserAsActivePlayer();
+            }else{
+                int pos = getCurrentPosition();
+                mPlayerDevice.disconnect();
+                mPlayerDevice = new OfflinePlayerAndroid(this, mContext);
+                playSong(mActualSong);
+                setCurrentPosition(pos);
+            }
+        }
+        mActualPlayer = player;
     }
 
     @Override
     public boolean supportBeamToPiepser() {
-        return false;
+        return OfflinePlayerSqueeze.isAvailable();
     }
 
     @Override
     public String getActivePlayerDevice() {
-        return null;
+        return mActualPlayer;
     }
 
     @Override
-    public void onCompletion(MediaPlayer mp) {
+    public void onSongCompletion( ) {
         mActState = Player.PLAYER_STATE_PAUSE;
         if (mActualPlayable != null) {
             mSettings.toFile(mActualPlayable.spotify_uri, mActualSong.getId());
@@ -237,6 +243,9 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
     private PlayableItems getPlayableItemsFromFile(Context context){
         String json = readJSON(context, FILENAME_PLAYABLES);
         PlayableItems pis = new Gson().fromJson(json, PlayableItems.class);
+        if (pis == null){
+            pis = new PlayableItems();
+        }
         PlayableItems pis2 = new PlayableItems();
         for(PlayableItemOffline pi: pis.mPlayableItems){
             pi.image = getBitmapFromString(pi.image_string);
@@ -365,12 +374,12 @@ public class OfflinePlayer extends Player implements MediaPlayer.OnCompletionLis
 
     @Override
     public int getCurrentPosition(){
-        return mMediaPlayer.getCurrentPosition();
+        return mPlayerDevice.getCurrentPosition();
     }
 
     @Override
     public void setCurrentPosition(int currentPosition) {
-        mMediaPlayer.seekTo(currentPosition);
+        mPlayerDevice.setCurrentPosition(currentPosition);
     }
 
     @Override

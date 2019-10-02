@@ -31,9 +31,10 @@ public class PlayableItem {
         getMetaData(uri,player1);
      }
 
-    public PlayableItem() {
 
-    }
+public PlayableItem(){
+
+}
 
     protected void getMetaData(String uri1, Player player1 ) {
 

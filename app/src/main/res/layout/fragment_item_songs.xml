@@ -16,6 +16,7 @@
         android:layout_height="40dp"
         android:hapticFeedbackEnabled="true"
         android:layout_marginEnd="20dp"
+        android:tint="@color/colorPrimary"
         app:srcCompat="@drawable/ic_play_selection"
         app:layout_constraintTop_toTopOf="@id/textSongTitle"
         app:layout_constraintBottom_toBottomOf="@id/textSongArtist"

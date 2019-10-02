@@ -9,12 +9,12 @@
         android:roundIcon="@mipmap/ic_launcher_new_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.example.idamusic_mobile.SelectionActivity">
-
-        </activity>
-        <activity android:name="com.example.idamusic_mobile.SongSelectActivity">
-
-        </activity>
+        <activity android:name="com.example.idamusic_mobile.SelectionActivity"
+            android:label="@string/title_selection_activity"
+             />
+        <activity android:name="com.example.idamusic_mobile.SongSelectActivity"
+            android:label="@string/title_song_activity"
+            />
         <activity android:name="com.example.idamusic_mobile.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

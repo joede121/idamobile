@@ -63,6 +63,18 @@ public class PlayableItemOffline extends PlayableItem {
         return null;
     }
 
+
+    public int getNumberOfSong(Song song){
+        int i = 0;
+        for (Song act_song : mSongs) {
+            if (act_song.getId() == song.getId()) {
+                return i;
+            }
+            i++;
+        }
+        return 0;
+    }
+
 }
 
 
