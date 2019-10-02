@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -74,7 +75,7 @@ public abstract class Player {
 
     public abstract void setPiepserAsActivePlayer();
 
-    public abstract List<String> getAllPlayers();
+    public abstract ArrayList<String> getAllPlayers();
 
     public abstract void setActivePlayer(String player);
 

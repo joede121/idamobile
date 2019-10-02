@@ -5,9 +5,11 @@
     android:id="@+id/linearLayoutFragmentSong"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="4dp"
+    android:padding="5dp"
+    android:layout_marginTop="5dp"
     android:adjustViewBounds="true"
     android:scaleType="fitCenter"
+    android:background="@drawable/radius_bg_4_highlight"
     >
 
     <ImageView
@@ -15,7 +17,7 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:hapticFeedbackEnabled="true"
-        android:layout_marginEnd="20dp"
+        android:layout_marginEnd="5dp"
         android:tint="@color/colorPrimary"
         app:srcCompat="@drawable/ic_play_selection"
         app:layout_constraintTop_toTopOf="@id/textSongTitle"
@@ -29,7 +31,7 @@
         android:layout_marginStart="3dp"
         android:textStyle="bold"
         android:text="1"
-        android:textSize="20dp"
+        android:textSize="16dp"
         android:fontFamily="sans-serif"
         android:gravity="center"
         android:maxLines="1"
@@ -42,12 +44,12 @@
         android:id="@+id/textSongTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="35dp"
+        android:layout_marginStart="30dp"
         android:textStyle="bold"
         android:text="Song Title ist super mdlw dkwed dke wdew dwe"
         android:fontFamily="sans-serif"
         android:maxLines="1"
-        android:textSize="16dp"
+        android:textSize="14dp"
         android:maxWidth="320dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -67,13 +69,7 @@
 
         />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/colorPrimaryDark"
-        android:layout_marginTop="4pt"
-        app:layout_constraintTop_toBottomOf="@id/textSongArtist"
-        app:layout_constraintStart_toStartOf="parent"/>
+
 
 
 </android.support.constraint.ConstraintLayout>

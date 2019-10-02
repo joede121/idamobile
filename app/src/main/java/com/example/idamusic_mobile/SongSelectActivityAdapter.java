@@ -1,6 +1,8 @@
 package com.example.idamusic_mobile;
 
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Display;
@@ -25,10 +27,12 @@ public class SongSelectActivityAdapter extends RecyclerView.Adapter<SongSelectAc
 
     private final Songs mSongs;
     private final selectSongListener mListener;
+    private String mActualSongUri;
 
-    public SongSelectActivityAdapter(Songs songs, selectSongListener listener) {
+    public SongSelectActivityAdapter(Songs songs, selectSongListener listener, String actualSongUri) {
         mSongs = songs;
         mListener = listener;
+        mActualSongUri = actualSongUri;
     }
 
     @Override
@@ -51,10 +55,18 @@ public class SongSelectActivityAdapter extends RecyclerView.Adapter<SongSelectAc
         // BitmapDrawable ob = new BitmapDrawable(mValues.get(position).playable.image);
         //    holder.mWebView.setImageDrawable(ob);
         // holder.mView.setBackground(ob);
+        if (holder.mSong.getUri().equals(mActualSongUri)){
+            holder.mImageViewPlay.setVisibility(View.INVISIBLE);
+            holder.mView.setBackgroundResource(R.drawable.radius_bg_4_primary);
+            holder.mIdSong.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.mArtistSong.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.mNameSong.setTextColor(Color.parseColor("#FFFFFF"));
+
+        }
         holder.mImageViewPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("SongSelect", "OnClick");
+//                Log.d("SongSelect", uri);
                 v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
                 if (null != mListener) {
                     // Notify the active callbacks interface (the activity, if the

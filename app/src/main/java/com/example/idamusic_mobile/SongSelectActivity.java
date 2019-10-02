@@ -20,7 +20,7 @@ public class SongSelectActivity extends AppCompatActivity implements SongSelectA
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.listsongs);
         String json = getIntent().getStringExtra("Songs");
         Songs songs = new Gson().fromJson(json, Songs.class);
-        recyclerView.setAdapter(new SongSelectActivityAdapter(songs, this));
+        recyclerView.setAdapter(new SongSelectActivityAdapter(songs, this,getIntent().getStringExtra("actualsong")));
         Toolbar myToolbar = (Toolbar) findViewById(R.id.main_toolbar);
         setSupportActionBar(myToolbar);
       }

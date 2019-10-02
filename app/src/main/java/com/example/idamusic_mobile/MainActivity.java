@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
     private Player player;
     public static final int INPUT_ACTIVITY_RESULT = 9999;
     public static final int INPUT_SONG_RESULT = 9900;
+    public static final int INPUT_PLAYER_RESULT = 9800;
     private boolean mShowBeamOption = false;
     public static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 9998;
     String mMode = Player.MODE_OFFLINE;
@@ -48,7 +49,7 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
     Handler mSeekBarUpdateHandler;
     Runnable mUpdateSeekbar;
     int mActDuration;
-    static final int MAX_CNT_ACT_POS = 300;
+    static final int MAX_CNT_ACT_POS = 500;
     int mCntActPos = 0;
 
     public void onPlayerStateChange( String player_state){
@@ -137,25 +138,32 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
         //btn = findViewById(R.id.button);
 
         TextView curPos = findViewById(R.id.textViewCurrentPosition);
+        mCntActPos = 0;
         mUpdateSeekbar = new Runnable() {
             int currentPosition;
             long lastCallCurrentPos=0;
             @Override
             public void run() {
                 currentPosition = currentPosition + (int)(System.currentTimeMillis()-lastCallCurrentPos);
+                //currentPosition = (int) lastCallCurrentPos + 50;
                 if (currentPosition>mActDuration)
                     currentPosition = 0;
+                    //lastCallCurrentPos = currentPosition;
                     lastCallCurrentPos = System.currentTimeMillis();
                 if (mCntActPos == 0) {
+                    //Log.d("MainActivityCntGet", System.currentTimeMillis() + "");
                     currentPosition = player.getCurrentPosition();
                     lastCallCurrentPos = System.currentTimeMillis();
+                    //lastCallCurrentPos = currentPosition;
                 }
                 mSeekBar.setProgress(currentPosition);
-                curPos.setText("-" + player.getStringDuration(mActDuration - currentPosition));
+                // curPos.setText("-" + player.getStringDuration(mActDuration - currentPosition));
                 mCntActPos++;
-                if (mCntActPos >  MAX_CNT_ACT_POS)
+                if (mCntActPos >  MAX_CNT_ACT_POS) {
+                    //Log.d("MainActivityCntMax", mCntActPos + "");
                     mCntActPos = 0;
-                mSeekBarUpdateHandler.postDelayed(this, 50);
+                }
+                mSeekBarUpdateHandler.postDelayed(this, 100);
             }
         };
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -214,6 +222,15 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
         if (INPUT_SONG_RESULT == requestCode) {
             if (resultCode == RESULT_OK) {
                 player.play_song(data.getStringExtra("Song_Uri"));
+            }
+
+        }
+
+        if (INPUT_PLAYER_RESULT == requestCode) {
+            if (resultCode == RESULT_OK) {
+                String newplayer = (data.getStringExtra("player"));
+                player.setActivePlayer(newplayer);
+                this.invalidateOptionsMenu();
             }
 
         }
@@ -315,6 +332,7 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
         songs.mSongs = player.getActPlayableItem().mSongs;
         String json = new Gson().toJson(songs);
         intent.putExtra("Songs", json);
+        intent.putExtra("actualsong", player.getActualTrackUri());
         startActivityForResult(intent, INPUT_SONG_RESULT);
     }
 
@@ -334,7 +352,7 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_start, menu);
         menu.findItem(R.id.action_beam).setVisible(mShowBeamOption);
-        if(player.getActivePlayerDevice().equals(SpotifyPlayer.PIEPSER_DEVICE_NAME)) {
+        if(!player.getActivePlayerDevice().equals(SpotifyPlayer.THIS_DEVICE_NAME)) {
             menu.findItem(R.id.action_beam).setIcon(ContextCompat.getDrawable(this, R.drawable.ic_cast_connected));
         }else{
             menu.findItem(R.id.action_beam).setIcon(ContextCompat.getDrawable(this, R.drawable.ic_cast));
@@ -376,21 +394,27 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
                     player.connect();
                 }else{
                     this.onConnected();
-                    // DummyContent.refresh();
                 }
                 break;
              case R.id.action_beam:
-                if(!player.getActivePlayerDevice().equals(SpotifyPlayer.PIEPSER_DEVICE_NAME)) {
-                    player.setPiepserAsActivePlayer();
-//                    if (player.getActivePlayerDevice().equals(SpotifyPlayer.PIEPSER_DEVICE_NAME))
-                        item.setIcon(ContextCompat.getDrawable(this, R.drawable.ic_cast_connected));
-                }else{
+                 Intent intent = new Intent(this, PlayerSelectActivity.class);
+                 intent.putStringArrayListExtra("players", player.getAllPlayers());
+                 intent.putExtra("actplayer", player.getActivePlayerDevice());
+                 startActivityForResult(intent, INPUT_PLAYER_RESULT);
+
+        /*
+                if(!player.getActivePlayerDevice().equals(SpotifyPlayer.THIS_DEVICE_NAME)) {
                     player.setActivePlayer(SpotifyPlayer.THIS_DEVICE_NAME);
 //                    if (player.getActivePlayerDevice().equals(SpotifyPlayer.THIS_DEVICE_NAME))
-                        item.setIcon(ContextCompat.getDrawable(this, R.drawable.ic_cast));
-                }
+                    item.setIcon(ContextCompat.getDrawable(this, R.drawable.ic_cast));
+                }else{
+                    player.setPiepserAsActivePlayer();
+//                    if (player.getActivePlayerDevice().equals(SpotifyPlayer.PIEPSER_DEVICE_NAME))
+                    item.setIcon(ContextCompat.getDrawable(this, R.drawable.ic_cast_connected));
+                }*/
                 break;
-            case R.id.action_select_beam:
+
+             case R.id.action_select_beam:
                 showPopup(findViewById(R.id.action_select_beam));
                 break;
             case R.id.action_on:
@@ -412,13 +436,16 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
         popup.setOnMenuItemClickListener(MainActivity.this);
         inflater.inflate(R.menu.menu_start_popup_players, popup.getMenu());
         int i = 0;
-        SubMenu sub = popup.getMenu().addSubMenu("Beamen nach...");
+        popup.getMenu().add(0, 9998, 0, "Beamen nach...");
         i = 5000;
         for (String player : player.getAllPlayers()) {
-            sub.add(0, i++, 0, player);
+            MenuItem item = popup.getMenu().add(0, i++, 0, player);
+            item.setCheckable(true);
+            if (player.equals(this.player.getActivePlayerDevice()))
+                item.setChecked(true);
         }
         if (mMode.equals(Player.MODE_ONLINE)) {
-            popup.getMenu().add(0, 9999, 0, "Offline speichern");
+            popup.getMenu().add(1, 9999, 0, "Offline speichern");
         }
 
         popup.show();
@@ -429,6 +456,9 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
 
         switch(id){
 
+            case 9998:
+                return true;
+
             case 9999:
                 // Offline
                 new AsyncTaskOffline().execute();
@@ -438,6 +468,7 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
                 CharSequence player_string = item.getTitle();
                 Log.d("MenuItemClick", player_string.toString());
                 player.setActivePlayer(player_string.toString());
+                this.invalidateOptionsMenu();
                 return true;
         }
 

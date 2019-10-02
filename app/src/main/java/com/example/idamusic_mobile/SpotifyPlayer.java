@@ -443,8 +443,8 @@ public class SpotifyPlayer extends Player {
     }
 
     @Override
-    public List<String> getAllPlayers() {
-        List<String> players = new ArrayList<>();
+    public ArrayList<String> getAllPlayers() {
+        ArrayList<String> players = new ArrayList<>();
         SpotifyDevices devs = getDevices();
         if(devs.devices == null) return players;
         for(SpotifyDevice dev: devs.devices){

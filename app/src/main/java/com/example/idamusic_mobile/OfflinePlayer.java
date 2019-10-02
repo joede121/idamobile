@@ -77,13 +77,14 @@ public class OfflinePlayer extends Player implements OfflinePlayerDev.OfflinePla
     @Override
     public void disconnect() {
         mIsConnected = false;
+        mPlayerDevice.disconnect();
         if (mActualSong != null)
             mSettings.toFile(mActualPlayable.spotify_uri, mActualSong.getId());
     }
 
     @Override
     public String getActualTrackUri() {
-        return null;
+        return mActualSong.getUri();
     }
 
     @Override
@@ -177,48 +178,53 @@ public class OfflinePlayer extends Player implements OfflinePlayerDev.OfflinePla
 
     @Override
     public void setPiepserAsActivePlayer() {
-        mActualPlayer = SpotifyPlayer.PIEPSER_DEVICE_NAME;
-        int pos = getCurrentPosition();
-        pos = pos - 1500;
-        if (pos < 0) pos = 0;
-        mPlayerDevice.disconnect();
-        mPlayerDevice = new OfflinePlayerSqueeze(this);
-        playSong(mActualSong);
-        pause();
-        try
-        {
-            Thread.sleep(300);
-        }
-        catch(InterruptedException ex)
-        {
-            Thread.currentThread().interrupt();
-        }
-        playSong(mActualSong);
-        setCurrentPosition(pos);
+        setActivePlayer(SpotifyPlayer.PIEPSER_DEVICE_NAME);
     }
 
     @Override
-    public List<String> getAllPlayers() {
-        List<String> players = new ArrayList<>();
+    public ArrayList<String> getAllPlayers() {
+        ArrayList<String> players = OfflinePlayerSqueeze.getAllPlayer();
         players.add(SpotifyPlayer.THIS_DEVICE_NAME);
-        players.add(SpotifyPlayer.PIEPSER_DEVICE_NAME);
         return players;
+    }
+
+    @Override
+    public void onPlayerStateChange(String state) {
+        listener.onPlayerStateChange(state);
     }
 
     @Override
     public void setActivePlayer(String player) {
         if (!mActualPlayer.equals(player)){
-            if (player.equals(SpotifyPlayer.PIEPSER_DEVICE_NAME)){
-                setPiepserAsActivePlayer();
-            }else{
+            mActualPlayer = player;
+            if (player.equals(SpotifyPlayer.THIS_DEVICE_NAME)){
                 int pos = getCurrentPosition();
                 mPlayerDevice.disconnect();
                 mPlayerDevice = new OfflinePlayerAndroid(this, mContext);
                 playSong(mActualSong);
                 setCurrentPosition(pos);
+            }else{
+                int pos = getCurrentPosition();
+                pos = pos - 1500;
+                if (pos < 0) pos = 0;
+                mPlayerDevice.disconnect();
+                mPlayerDevice = new OfflinePlayerSqueeze(this);
+                mPlayerDevice.setActivePlayer(player);
+                playSong(mActualSong);
+                pause();
+                try
+                {
+                    Thread.sleep(300);
+                }
+                catch(InterruptedException ex)
+                {
+                    Thread.currentThread().interrupt();
+                }
+                playSong(mActualSong);
+                setCurrentPosition(pos);
             }
         }
-        mActualPlayer = player;
+
     }
 
     @Override

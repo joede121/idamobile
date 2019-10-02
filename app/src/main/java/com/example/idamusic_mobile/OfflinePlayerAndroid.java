@@ -9,6 +9,9 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class OfflinePlayerAndroid  extends OfflinePlayerDev implements MediaPlayer.OnCompletionListener {
 
     OfflinePlayerDevListener mListener;
@@ -25,6 +28,7 @@ public class OfflinePlayerAndroid  extends OfflinePlayerDev implements MediaPlay
 
     }
 
+
     public void disconnect() {
         mMediaPlayer.stop();
         mMediaPlayer.release();
@@ -33,6 +37,11 @@ public class OfflinePlayerAndroid  extends OfflinePlayerDev implements MediaPlay
     @Override
     public void onCompletion(MediaPlayer mp) {
         mListener.onSongCompletion();
+    }
+
+    @Override
+    public void setActivePlayer(String player) {
+
     }
 
     public void playSong(Song song, PlayableItemOffline pi) {
