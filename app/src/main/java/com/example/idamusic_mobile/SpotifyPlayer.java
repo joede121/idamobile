@@ -1,5 +1,6 @@
 package com.example.idamusic_mobile;
 
+import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
@@ -65,6 +66,7 @@ public class SpotifyPlayer extends Player {
         this.listener = listener;
         mSetting = new SettingsParcelable(activity.getApplicationContext(), FILENAME_SETTING);
         mActPosition = 0;
+        actualPlayer = this;
     }
 
     void setPlayerstate(PlayerState playerstate) {
@@ -461,7 +463,11 @@ public class SpotifyPlayer extends Player {
 
     @Override
     public String getActivePlayerDevice(){
-        return getActiveDevice().name;
+
+        SpotifyDevice dev = getActiveDevice();
+
+        if( dev != null) return getActiveDevice().name;
+        return "";
 
     }
 
@@ -512,6 +518,26 @@ public class SpotifyPlayer extends Player {
     @Override
     public void play_song(String uri) {
         // TODO play song spotify
+    }
+
+    @Override
+    public boolean isRemotePlayer() {
+        return false;
+    }
+
+    @Override
+    public void setRemoteMode(boolean remoteModeOn) {
+
+    }
+
+    @Override
+    public boolean isRemoteModeOn() {
+        return false;
+    }
+
+    @Override
+    public void setActivity(PlayerListener listener, Context context) {
+
     }
 }
 

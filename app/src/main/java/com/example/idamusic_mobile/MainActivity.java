@@ -3,6 +3,7 @@ package com.example.idamusic_mobile;
 
 import android.Manifest;
 import android.app.ProgressDialog;
+import android.content.ComponentCallbacks2;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -35,7 +36,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 
-public class MainActivity extends AppCompatActivity implements PlayerListener, PopupMenu.OnMenuItemClickListener {
+public class MainActivity extends AppCompatActivity implements PlayerListener, PopupMenu.OnMenuItemClickListener, ComponentCallbacks2 {
     private String uri = "";
     private ImageView imStop;
     private Player player;
@@ -49,8 +50,16 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
     Handler mSeekBarUpdateHandler;
     Runnable mUpdateSeekbar;
     int mActDuration;
-    static final int MAX_CNT_ACT_POS = 500;
+    static final int MAX_CNT_ACT_POS = 250;
     int mCntActPos = 0;
+    int currentPosition = 0;
+
+    @Override
+    public void onTrimMemory(int t){
+        Log.d("MainActivityMemoryTrim", t + "");
+
+
+    }
 
     public void onPlayerStateChange( String player_state){
         if (player_state.equals(Player.PLAYER_STATE_PLAY)) {
@@ -133,14 +142,12 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
         mSeekBar = findViewById(R.id.seekBar);
         mSeekBarUpdateHandler = new Handler();
         imStop = findViewById(R.id.imageView);
-        player = Player.factory(this, this, mMode);
-        player.connect();
-        //btn = findViewById(R.id.button);
+
 
         TextView curPos = findViewById(R.id.textViewCurrentPosition);
         mCntActPos = 0;
         mUpdateSeekbar = new Runnable() {
-            int currentPosition;
+
             long lastCallCurrentPos=0;
             @Override
             public void run() {
@@ -163,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
                     //Log.d("MainActivityCntMax", mCntActPos + "");
                     mCntActPos = 0;
                 }
-                mSeekBarUpdateHandler.postDelayed(this, 100);
+                mSeekBarUpdateHandler.postDelayed(this, 50);
             }
         };
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -192,13 +199,24 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
 
         });
 
+        if(Player.actualPlayer != null) {
+            player = Player.actualPlayer;
+            player.setActivity(this, getApplicationContext());
+        }else{
+            player = Player.factory(this, this, mMode);
+        }
+        player.connect();
+        //btn = findViewById(R.id.button);
+
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        if (!player.isConnected()) player.connect();
-
+        if (!player.isConnected()){
+            player.disconnect();
+            player.connect();
+        }
     }
 
 
@@ -238,20 +256,22 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
 
     @Override
     protected void onStop() {
+        //mSeekBarUpdateHandler.removeCallbacks(mUpdateSeekbar);
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+        Log.d("MainActivityOnDestroy" ,"TT");
         player.pause();
         player.disconnect();
+        super.onDestroy();
+        super.finish();
     }
 
     public void setURI( String uri ){
         this.uri = uri;
     }
-
 
 
     public void spotPlay(String uri) {
@@ -325,6 +345,7 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
         Intent intent = new Intent(this, SelectionActivity.class);
         startActivityForResult(intent, INPUT_ACTIVITY_RESULT);
     }
+
 
     void openSelectSongActicity() {
         Intent intent = new Intent(this, SongSelectActivity.class);
@@ -436,13 +457,9 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
         popup.setOnMenuItemClickListener(MainActivity.this);
         inflater.inflate(R.menu.menu_start_popup_players, popup.getMenu());
         int i = 0;
-        popup.getMenu().add(0, 9998, 0, "Beamen nach...");
-        i = 5000;
-        for (String player : player.getAllPlayers()) {
-            MenuItem item = popup.getMenu().add(0, i++, 0, player);
-            item.setCheckable(true);
-            if (player.equals(this.player.getActivePlayerDevice()))
-                item.setChecked(true);
+        if (player.isRemotePlayer()) {
+            popup.getMenu().add(0, 9997, 0, "Remote Modus").setCheckable(true).setChecked(player.isRemoteModeOn());
+
         }
         if (mMode.equals(Player.MODE_ONLINE)) {
             popup.getMenu().add(1, 9999, 0, "Offline speichern");
@@ -450,6 +467,13 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
 
         popup.show();
     }
+
+    @Override
+    public void setTrackProgress(int progress) {
+        currentPosition = progress;
+        //mSeekBar.setProgress(progress);
+    }
+
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         int id = item.getItemId();
@@ -464,17 +488,28 @@ public class MainActivity extends AppCompatActivity implements PlayerListener, P
                 new AsyncTaskOffline().execute();
                 return true;
 
+            case 9997:
+                // Remote Modus
+                if(player.isRemoteModeOn()) {
+                    player.setRemoteMode(false);
+                    onConnected();
+                }else{
+                    player.setRemoteMode(true);
+                    onConnected();
+                }
+
+                return true;
             default:
-                CharSequence player_string = item.getTitle();
-                Log.d("MenuItemClick", player_string.toString());
-                player.setActivePlayer(player_string.toString());
-                this.invalidateOptionsMenu();
                 return true;
         }
 
+
+
     }
 
-private class AsyncWaitConnect extends AsyncTask<String, String, String>{
+
+
+    private class AsyncWaitConnect extends AsyncTask<String, String, String>{
 
     private String resp;
     ProgressDialog progressDialog;
@@ -557,3 +592,4 @@ private class AsyncWaitConnect extends AsyncTask<String, String, String>{
 
 
 }
+

@@ -56,20 +56,23 @@ public class PlayerSelectActivityAdapter extends RecyclerView.Adapter<PlayerSele
         switch(holder.mPlayer) {
             case SpotifyPlayer.PIEPSER_DEVICE_NAME:
                 holder.mImageViewPlayer.setImageResource(R.drawable.ic_einhorn);
+                holder.mTextPlayer.setText("Ida Piepser");
                 break;
             case SpotifyPlayer.THIS_DEVICE_NAME:
                 holder.mImageViewPlayer.setImageResource(R.drawable.ic_smartphone_24px);
-                break;
-            case OfflinePlayerSqueeze.PLAYER_BATHROOM:
-                holder.mImageViewPlayer.setImageResource(R.drawable.ic_bathtub_24px);
-                break;
-            case OfflinePlayerSqueeze.PLAYER_LIVINGROOM:
-                holder.mImageViewPlayer.setImageResource(R.drawable.ic_tv_24px);
-                break;
-            case OfflinePlayerSqueeze.PLAYER_BEDROOM:
-                holder.mImageViewPlayer.setImageResource(R.drawable.ic_king_bed_24px);
+                holder.mTextPlayer.setText("Nicht Beamen");
                 break;
         }
+
+         if (holder.mPlayer.equals(OfflinePlayerSqueeze.Companion.getPLAYER_BATHROOM()))
+                holder.mImageViewPlayer.setImageResource(R.drawable.ic_bathtub_24px);
+
+         if (holder.mPlayer.equals(OfflinePlayerSqueeze.Companion.getPLAYER_LIVINGROOM()))
+                holder.mImageViewPlayer.setImageResource(R.drawable.ic_tv_24px);
+
+         if (holder.mPlayer.equals(OfflinePlayerSqueeze.Companion.getPLAYER_BEDROOM()))
+                holder.mImageViewPlayer.setImageResource(R.drawable.ic_king_bed_24px);
+
 
         if(holder.mPlayer.equals(mActPlayer)){
             holder.mView.setBackgroundResource(R.drawable.radius_bg_4_highlight);

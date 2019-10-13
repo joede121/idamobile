@@ -6,6 +6,7 @@ import java.util.List;
 public class PlayableItemOffline extends PlayableItem {
 
     public String image_string;
+    public boolean isRemote;
 
 
     public PlayableItemOffline(String uri, Player player1) {
@@ -20,6 +21,10 @@ public class PlayableItemOffline extends PlayableItem {
         this.uri = pi.uri;
         this.spotify_uri = pi.uri;
 
+    }
+
+    public PlayableItemOffline(){
+        super();
     }
 
     public Song getNextSong(Song song) {
@@ -58,6 +63,14 @@ public class PlayableItemOffline extends PlayableItem {
     public Song getSongFromId(Long id) {
         for (Song act_song: mSongs) {
             if (act_song.getId() == id)
+                return act_song;
+        }
+        return null;
+    }
+
+    public Song getSongFromUri(String uri) {
+        for (Song act_song: mSongs) {
+            if (act_song.getUri().equals(uri))
                 return act_song;
         }
         return null;

@@ -1,5 +1,6 @@
 package com.example.idamusic_mobile;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -19,6 +20,7 @@ public abstract class Player {
     public static final String MODE_ONLINE = "ONLINE";
     public static final String MODE_OFFLINE= "OFFLINE";
     protected PlayerListener listener;
+    public static Player actualPlayer;
 
     Integer error_cnt;
     final static int ERROR_CNT_LIMIT = 99;
@@ -86,6 +88,14 @@ public abstract class Player {
     public abstract int getCurrentPosition();
 
     public abstract void setCurrentPosition( int currentPosition );
+
+    public abstract boolean isRemotePlayer();
+
+    public abstract void setRemoteMode(boolean remoteModeOn);
+
+    public abstract boolean isRemoteModeOn();
+
+    public abstract void setActivity(PlayerListener listener, Context context);
 
     public Bitmap getBitmapFromURL(String src) {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();

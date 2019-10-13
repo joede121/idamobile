@@ -85,4 +85,18 @@ public class OfflinePlayerAndroid  extends OfflinePlayerDev implements MediaPlay
         mMediaPlayer.seekTo(currentPosition);
     }
 
+    @Override
+    public boolean isRemotePlayer() {
+        return false;
+    }
+
+    @Override
+    public void setRemoteMode(boolean remoteMode) {
+
+    }
+
+    @Override
+    public void getPlayables(Context ctx) {
+
+    }
 }

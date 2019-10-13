@@ -50,12 +50,19 @@ public class SongSelectActivityAdapter extends RecyclerView.Adapter<SongSelectAc
         holder.mNameSong.setText(holder.mSong.getTitle());
         holder.mIdSong.setText(position + 1 +"");
         holder.mArtistSong.setText(holder.mSong.getArtist());
+        holder.mIdSong.setTextColor(Color.parseColor("#8A06A0"));
+        holder.mArtistSong.setTextColor(Color.parseColor("#8A06A0"));
+        holder.mNameSong.setTextColor(Color.parseColor("#8A06A0"));
         //holder.mIdView.setText(mValues.get(position).playable.artist);
         //holder.mContentView.setText(mValues.get(position).playable.name);
         // BitmapDrawable ob = new BitmapDrawable(mValues.get(position).playable.image);
         //    holder.mWebView.setImageDrawable(ob);
         // holder.mView.setBackground(ob);
+        holder.mImageViewPlay.setVisibility(View.VISIBLE);
+        holder.mView.setBackgroundResource(R.drawable.radius_bg_4_highlight);
+        Log.d("SongSelectActualDavor", holder.mSong.getUri() + " " + mActualSongUri + " " + holder.mSong.getTitle());
         if (holder.mSong.getUri().equals(mActualSongUri)){
+            Log.d("SongSelectActual", holder.mSong.getUri() + " " + mActualSongUri + " " + holder.mSong.getTitle());
             holder.mImageViewPlay.setVisibility(View.INVISIBLE);
             holder.mView.setBackgroundResource(R.drawable.radius_bg_4_primary);
             holder.mIdSong.setTextColor(Color.parseColor("#FFFFFF"));

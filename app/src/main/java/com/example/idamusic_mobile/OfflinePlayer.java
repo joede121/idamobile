@@ -24,7 +24,9 @@ import java.util.List;
 public class OfflinePlayer extends Player implements OfflinePlayerDev.OfflinePlayerDevListener{
     private final static String FILENAME_PLAYABLES = "playable_items";
     private MainActivity activity;
-    PlayableItems mPItems;
+    PlayableItems mPItemsOffline;
+    PlayableItems mPitemsRemote;
+    PlayableItems mActualPlayableItems;
     Context mContext;
     boolean mIsConnected;
     Song mActualSong;
@@ -34,8 +36,10 @@ public class OfflinePlayer extends Player implements OfflinePlayerDev.OfflinePla
     OfflinePlayerDev mPlayerDevice;
     transient static final String FILENAME_SETTINGS = "SETTINGS";
     String mActualPlayer = SpotifyPlayer.THIS_DEVICE_NAME;
+    PlayerListenerPlaylists mPlaylistListener;
+    boolean mRemoteModeOn;
 
-    public OfflinePlayer(Context context, PlayerListener listener){
+    public OfflinePlayer(Context context, PlayerListener listener) {
         this.listener = listener;
         this.mContext = context;
         mPlayerDevice = new OfflinePlayerAndroid(this, context);
@@ -46,25 +50,42 @@ public class OfflinePlayer extends Player implements OfflinePlayerDev.OfflinePla
         listener.onAlbumCoverChange(BitmapFactory.decodeResource(context.getResources(),
                 R.drawable.ic_play_selection));
         mActualPlayer = SpotifyPlayer.THIS_DEVICE_NAME;
+        actualPlayer = this;
+
+    }
+
+    @Override
+    public void setActivity(PlayerListener listener, Context context) {
+        this.listener = listener;
+        this.mContext = context;
     }
 
     @Override
     public void connect() {
         // Oflline Sachen Holel);
-        this.mPItems = getPlayableItemsFromFile(this.mContext);
-        if (mPItems != null) {
-            mActualPlayable = mPItems.getPlayableItemFromUri(mSettings.offline_uri_playable);
-            if (mActualPlayable != null) {
-                mActualSong = mActualPlayable.getSongFromId(mSettings.offline_id_song);
-                if (mActualSong != null) {
-                    Log.d("trackchange", mActualSong.getTitle() + mActualPlayable.uri );
-                    playActualSong();
-                    pause();
+        if (!this.isConnected()) {
+            this.mPItemsOffline = getPlayableItemsFromFile(this.mContext);
+            mActualPlayableItems = mPItemsOffline;
+            if (mPItemsOffline != null) {
+                mActualPlayable = mPItemsOffline.getPlayableItemFromUri(mSettings.offline_uri_playable);
+                if (mActualPlayable != null) {
+                    mActualSong = mActualPlayable.getSongFromId(mSettings.offline_id_song);
+                    if (mActualSong != null) {
+                        Log.d("trackchange", mActualSong.getTitle() + mActualPlayable.uri);
+                        playActualSong();
+                        pause();
+                    }
                 }
+
             }
+            mIsConnected = true;
+        }else{
+            listener.onPlayerStateChange(mActState);
+            listener.onTrackChange(mActualSong.getTitle(), mActualSong.getUri(),  mPlayerDevice.getDuration(),mActualSong.getArtist());
+            listener.onAlbumCoverChange(mActualPlayable.image);
+            Log.d("ConnectDuration", mPlayerDevice.getDuration() + "");
 
         }
-        mIsConnected = true;
         listener.onConnected();
 
     }
@@ -90,7 +111,7 @@ public class OfflinePlayer extends Player implements OfflinePlayerDev.OfflinePla
     @Override
     public void play(String uri) {
 
-        PlayableItemOffline pi = mPItems.getPlayableItemFromUri(uri);
+        PlayableItemOffline pi = mActualPlayableItems.getPlayableItemFromUri(uri);
         if (pi != null) {
             mActualPlayable = pi;
             Song song = pi.mSongs.get(0);
@@ -103,12 +124,14 @@ public class OfflinePlayer extends Player implements OfflinePlayerDev.OfflinePla
     }
 
     void playSong(Song song){
-        mActualSong = song;
-        mPlayerDevice.playSong(mActualSong, mActualPlayable);
-        mActState = PLAYER_STATE_PLAY;
-        listener.onPlayerStateChange(PLAYER_STATE_PLAY);
-        listener.onTrackChange(song.getTitle(), mActualPlayable.spotify_uri, mPlayerDevice.getDuration(), mActualSong.getArtist());
-        listener.onAlbumCoverChange(mActualPlayable.image);
+        if (song != null) {
+            mActualSong = song;
+            mPlayerDevice.playSong(mActualSong, mActualPlayable);
+            mActState = PLAYER_STATE_PLAY;
+            listener.onTrackChange(song.getTitle(), mActualPlayable.spotify_uri, mPlayerDevice.getDuration(), mActualSong.getArtist());
+            listener.onAlbumCoverChange(mActualPlayable.image);
+            listener.onPlayerStateChange(PLAYER_STATE_PLAY);
+        }
     }
 
     @Override
@@ -148,14 +171,19 @@ public class OfflinePlayer extends Player implements OfflinePlayerDev.OfflinePla
 
     @Override
     public void getPlayableItems(String prefix, PlayerListenerPlaylists listener) {
-        for(PlayableItem pi: mPItems.mPlayableItems ){
-            listener.success(pi.uri);
+        mPlaylistListener = listener;
+        if (mRemoteModeOn){
+            mPlayerDevice.getPlayables(mContext);
+        }else {
+            for (PlayableItem pi : mPItemsOffline.mPlayableItems) {
+                listener.success(pi.uri);
+            }
         }
     }
 
     @Override
     public void getAlbum(String uri, PlayerListenerAlbum listener) {
-        for(PlayableItem pi: mPItems.mPlayableItems){
+        for(PlayableItem pi: mActualPlayableItems.mPlayableItems){
             if(pi.uri.equals(uri)) {
                 listener.success(pi.name, pi.artist, pi.image);
                 break;
@@ -183,9 +211,14 @@ public class OfflinePlayer extends Player implements OfflinePlayerDev.OfflinePla
 
     @Override
     public ArrayList<String> getAllPlayers() {
-        ArrayList<String> players = OfflinePlayerSqueeze.getAllPlayer();
+        ArrayList<String> players = OfflinePlayerSqueeze.Companion.getAllPlayer();
         players.add(SpotifyPlayer.THIS_DEVICE_NAME);
         return players;
+    }
+
+    @Override
+    public void onDurationChange(int duration) {
+        listener.onTrackChange(mActualSong.getTitle(), mActualPlayable.spotify_uri, duration, mActualSong.getArtist());
     }
 
     @Override
@@ -211,16 +244,14 @@ public class OfflinePlayer extends Player implements OfflinePlayerDev.OfflinePla
                 mPlayerDevice = new OfflinePlayerSqueeze(this);
                 mPlayerDevice.setActivePlayer(player);
                 playSong(mActualSong);
-                pause();
                 try
                 {
-                    Thread.sleep(300);
+                    Thread.sleep(2000);
                 }
                 catch(InterruptedException ex)
                 {
                     Thread.currentThread().interrupt();
                 }
-                playSong(mActualSong);
                 setCurrentPosition(pos);
             }
         }
@@ -229,7 +260,7 @@ public class OfflinePlayer extends Player implements OfflinePlayerDev.OfflinePla
 
     @Override
     public boolean supportBeamToPiepser() {
-        return OfflinePlayerSqueeze.isAvailable();
+        return OfflinePlayerSqueeze.Companion.isAvailable();
     }
 
     @Override
@@ -352,7 +383,7 @@ public class OfflinePlayer extends Player implements OfflinePlayerDev.OfflinePla
         }
         String sort_order = MediaStore.Audio.Media.TRACK + " ASC";
 
-        //selectionArgs[1] = pio.artist;
+        //selectionArgs[1] = pio.artist;PlayerListenerPlaylists listener
         Log.d("music0 ", selection + selectionArgs[0]);
         Cursor musicCursor = musicResolver.query(musicUri, null, selection, selectionArgs, sort_order);
         if(musicCursor != null){
@@ -407,6 +438,41 @@ public class OfflinePlayer extends Player implements OfflinePlayerDev.OfflinePla
 
     @Override
     public void play_song(String uri){
-        playSong(mActualPlayable.getSongFromId(Long.parseLong(uri)));
+        playSong(mActualPlayable.getSongFromUri(uri));
+    }
+
+    @Override
+    public void onProgressChange(int progress) {
+        listener.setTrackProgress(progress);
+    }
+
+    @Override
+    public boolean isRemotePlayer() {
+       return mPlayerDevice.isRemotePlayer();
+    }
+
+
+    @Override
+    public void setRemoteMode(boolean remoteModeOn) {
+        mPlayerDevice.setRemoteMode( remoteModeOn );
+        mRemoteModeOn = remoteModeOn;
+        if(remoteModeOn) {
+            mActualPlayableItems.mPlayableItems.clear();
+        }else{
+            mActualPlayableItems.mPlayableItems.clear();
+            mActualPlayableItems.mPlayableItems = mPItemsOffline.mPlayableItems;
+        }
+
+    }
+
+    @Override
+    public void onPlaylistItemChange(PlayableItemOffline pi) {
+        mActualPlayableItems.mPlayableItems.add(pi);
+        mPlaylistListener.success(pi.uri);
+    }
+
+    @Override
+    public boolean isRemoteModeOn() {
+        return mRemoteModeOn;
     }
 }

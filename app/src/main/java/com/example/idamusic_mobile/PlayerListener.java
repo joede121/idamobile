@@ -14,6 +14,8 @@ interface PlayerListener {
 
     public void onConnectedError( );
 
+    public void setTrackProgress( int progress );
+
 }
 
 
